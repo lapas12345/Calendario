@@ -51,3 +51,47 @@ export default async function handler(req, res) {
         producto: resultado[0]
       });
     }
+
+    // PUT - Actualizar producto
+    if (req.method === 'PUT') {
+      const { id, nombre, tipo, descripcion, stock_actual, stock_minimo, 
+              precio_compra, precio_venta, unidad_medida, ubicacion } = req.body;
+
+      const resultado = await sql`
+        UPDATE productos 
+        SET nombre = ${nombre}, tipo = ${tipo}, descripcion = ${descripcion},
+            stock_actual = ${stock_actual}, stock_minimo = ${stock_minimo},
+            precio_compra = ${precio_compra}, precio_venta = ${precio_venta},
+            unidad_medida = ${unidad_medida}, ubicacion = ${ubicacion}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+
+      return res.status(200).json({
+        success: true,
+        producto: resultado[0]
+      });
+    }
+
+    // DELETE - Eliminar producto
+    if (req.method === 'DELETE') {
+      const { id } = req.query;
+
+      await sql`DELETE FROM productos WHERE id = ${id}`;
+
+      return res.status(200).json({
+        success: true,
+        message: 'Producto eliminado'
+      });
+    }
+
+    return res.status(405).json({ error: 'Método no permitido' });
+
+  } catch (error) {
+    console.error('Error en productos:', error);
+    return res.status(500).json({ 
+      error: 'Error en el servidor',
+      details: error.message 
+    });
+  }
+}
